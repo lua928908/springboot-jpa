@@ -16,3 +16,4 @@ spring:
 logging:
   lever:
     org.hibernate.SQL: debug
+    org.hibernate.type: trace
