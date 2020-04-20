@@ -1,5 +1,6 @@
 package jpabook.jpashoop;
 
+import jpabook.jpashoop.domain.Member;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
