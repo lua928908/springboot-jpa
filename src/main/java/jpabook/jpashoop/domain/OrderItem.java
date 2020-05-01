@@ -1,7 +1,9 @@
 package jpabook.jpashoop.domain;
 
 import jpabook.jpashoop.domain.Item.Item;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
@@ -9,6 +11,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // create메서드로 안만들고 new를 통해 set으로 값을채우는걸 막기위해 만들어 놓음
 public class OrderItem {
     @Id
     @GeneratedValue

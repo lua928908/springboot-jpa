@@ -1,6 +1,8 @@
 package jpabook.jpashoop.domain;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
@@ -12,6 +14,7 @@ import java.util.List;
 @Table(name = "orders") // order by 예약어 때문에 orders로 만들었으므로 order를 order와 매핑하게 name 지정해야함
 @Getter
 @Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // create메서드로 안만들고 new를 통해 set으로 값을채우는걸 막기위해 만들어 놓음
 public class Order {
     @Id
     @GeneratedValue
@@ -60,6 +63,8 @@ public class Order {
         }
         order.setStatus(OrderStatus.ORDER);
         order.setOrderDate(LocalDateTime.now());
+
+        return order;
     }
 
     // 비즈니스 로직
