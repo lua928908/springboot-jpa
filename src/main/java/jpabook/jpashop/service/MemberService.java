@@ -23,6 +23,12 @@ public class MemberService {
         return member.getId();
     }
 
+    @Transactional
+    public void update(Long id, String name){
+        Member member = memberRepository.findOne(id);
+        member.setName(name);
+    }
+
     private void validateDuplicateMember(Member member) {
         List<Member> findMembers = memberRepository.findName(member.getName()); // member에 name을 유니크 제약조건을 하는것이 좋다. 멀티쓰레드로 인해 같은이름이 동시에 들어갈 수도 있음
         if(!findMembers.isEmpty()){

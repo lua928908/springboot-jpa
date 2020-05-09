@@ -2,12 +2,11 @@ package jpabook.jpashop.api;
 
 import jpabook.jpashop.domain.Member;
 import jpabook.jpashop.service.MemberService;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -30,6 +29,27 @@ public class MemberApiController {
 
         Long id = memberService.join(member);
         return new CreateMemberResponse(id);
+    }
+
+    @PutMapping("/api/v2/members/{id}")
+    public UpdateMemberResponse updateMemberV2(
+            @PathVariable("id") Long id,
+            @RequestBody @Valid UpdateMemberRequest request){
+        memberService.update(id, request.getName()); // 01. 여기서 member엔티티를 반환하지 않았다, 반환해주면 영속성 컨텍스트와 연결이 끊긴채로 엔티티만 반환하게 되는데 이상태로 사용하는게 위험하기 때문이다.
+        Member findMember = memberService.findOne(id); // 02. 여기서 다시 조회해왔다, 영속성 컨텍스트에 관리될 수 있도록 (쿼리와 커맨드를 분리하기 위함도 있다.)
+        return new UpdateMemberResponse(findMember.getId(), findMember.getName());
+    }
+
+    @Data
+    static class UpdateMemberRequest{
+        private String name;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class UpdateMemberResponse{
+        private Long id;
+        private String name;
     }
 
     @Data
