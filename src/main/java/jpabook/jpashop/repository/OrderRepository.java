@@ -69,4 +69,20 @@ public class OrderRepository {
                         " join fetch o.delivery d", Order.class
         ).getResultList();
     }
+
+    /*
+        distinct의 역할은 2가지이다.
+        1. DB 쿼리에 distinct 키워드를 넣어준다.
+        2. JPA에서 자체적으로 객체의 id가 같은경우 중복을 제거해 준다.
+        DB에 쿼리를 날려서 받은 결과물은 여러개 인데 id가 같은값을 중복제거 후 반환해주는 것이다.
+    */
+    public List<Order> findAllWithItem() {
+        return em.createQuery(
+                "select distinct o from Order o" +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d" +
+                        " join fetch o.orderItems oi" +
+                        " join fetch oi.item i", Order.class)
+                .getResultList();
+    }
 }
