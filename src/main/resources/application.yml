@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/jpashop
+    url: jdbc:h2:tcp://localhost/~/datajpa
     username: sa
     password:
       driver-class-name: org.h2.Driver
@@ -10,7 +10,7 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
-        show_sql: true
+#        show_sql: true
         format_sql: true
         default_batch_fetch_size: 200 # 일대다 관계(컬렉션) 에서 fetch join으로 최적화를 하면 페이징이 안되기 때문에 LAZY로 가져와야 하는데 성능최적화를 위해 batch로 가져온다. 1000개 정도가 최대치 이다.
     open-in-view: true
@@ -19,4 +19,4 @@ spring:
 logging:
   lever:
     org.hibernate.SQL: debug
-    org.hibernate.type: trace
+    org.hibernate.type: trace # 바인딩된 파라미터도 볼 수 있음
