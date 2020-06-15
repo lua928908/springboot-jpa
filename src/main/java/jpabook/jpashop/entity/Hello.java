@@ -8,7 +8,7 @@ import javax.persistence.Id;
 
 @Entity
 @Getter
-public class Item {
+public class Hello {
     @Id
     @GeneratedValue
     private Long id;
