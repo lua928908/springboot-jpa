@@ -13,6 +13,7 @@ spring:
 #        show_sql: true
         format_sql: true
         default_batch_fetch_size: 200 # 일대다 관계(컬렉션) 에서 fetch join으로 최적화를 하면 페이징이 안되기 때문에 LAZY로 가져와야 하는데 성능최적화를 위해 batch로 가져온다. 1000개 정도가 최대치 이다.
+        use_sql_comments: true # queryDSL의 실행 query를 보여줌
     open-in-view: true
     data:
       web:
