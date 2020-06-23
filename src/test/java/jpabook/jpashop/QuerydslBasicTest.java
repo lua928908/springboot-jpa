@@ -2,12 +2,13 @@ package jpabook.jpashop;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jpabook.jpashop.entity.Member;
 import jpabook.jpashop.entity.QMember;
-import jpabook.jpashop.entity.QTeam;
 import jpabook.jpashop.entity.Team;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import javax.persistence.PersistenceUnit;
 
 import java.util.List;
 
+import static com.querydsl.jpa.JPAExpressions.*;
 import static jpabook.jpashop.entity.QMember.*;
 import static jpabook.jpashop.entity.QTeam.*;
 import static org.assertj.core.api.Assertions.*;
@@ -324,4 +326,143 @@ public class QuerydslBasicTest {
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());// 로딩된 엔티티인지 아닌지 즉, 초기화 된 엔티티인지 확인해 준다.
         assertThat(loaded).as("페치 조인 미적용").isTrue();
     }
+
+    /*
+    * 나이가 가장 많은 회원 조회
+    * */
+    @Test
+    public void subQuery(){
+        QMember memberSub = new QMember("memberSUb"); // member 라는 별칭으로 서브쿼리에 쓸 수 없기 때문에 별도로 가져온 별칭
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        // where 절의 eq 값이 서브쿼리
+                        select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(40);
+    }
+
+    /*
+     * 나이가 평균 이상인 회원
+     * */
+    @Test
+    public void subQueryGoe(){
+        QMember memberSub = new QMember("memberSUb");
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.goe(
+                        select(memberSub.age.avg())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(40);
+    }
+
+    @Test
+    public void subQueryIn(){
+        QMember memberSub = new QMember("memberSUb");
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.in(
+                        select(memberSub.age)
+                            .from(memberSub)
+                            .where(memberSub.age.gt(10))
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(20, 30, 40);
+    }
+
+    @Test
+    public void selectSubQuery(){
+        QMember memberSub = new QMember("memberSUb");
+
+        List<Tuple> result = queryFactory
+                .select(member.username,
+                        select(memberSub.age.avg())
+                                .from(memberSub))
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+
+    @Test
+    public void basicCase(){
+        List<String> result = queryFactory
+                .select(member.age
+                        .when(10).then("열살")
+                        .when(20).then("스무살")
+                        .otherwise("기타")
+                )
+                .from(member)
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    public void complexCase(){
+        List<String> list = queryFactory
+                .select(new CaseBuilder() // 조금 복잡한 case의 경우 CaseBuilder를 사용해야 된다. (근데 이런걸 DB query로 해결해줘야 하냐에 대해 고민해봐야 한다.)
+                        .when(member.age.between(0, 20)).then("0~20살")
+                        .when(member.age.between(21, 30)).then("21살~30살")
+                        .otherwise("기타")
+                )
+                .from(member)
+                .fetch();
+
+        for (String s : list) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    // 상수
+    @Test
+    public void constant(){
+        List<Tuple> result = queryFactory
+                .select(member.username, Expressions.constant("A"))
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
+
+    // 문자 더하기
+    @Test
+    public void concat(){
+
+        // {username}_{age} 를 얻고 싶은 상황인데 member.age가 문자타입이 아니기 때문에(int 타입임) stringValue()를 써주어야 한다.
+        List<String> result = queryFactory
+                .select(member.username.concat("_").concat(member.age.stringValue()))
+                .from(member)
+                .where(member.username.eq("member1"))
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
 }
+
+
+/*
+* queryDSL 혹은 JPQL에서의 서브쿼리는 select절, where절 에서는 가능하지만 from절에서는 못쓴다.
+* 해결 01. 서브쿼리를 join으로 변경한다. (가능한 경우도 있고 join으로 바꿔서 해결이 안되는 경우가 있음)
+* 해결 02. 애플리케이션에서 쿼리를 2번 분리해서 실행한다. (실시간 트래픽이 중요하다면 고민해봐야 겠지만 그게 아니라면 나눠서 쿼리하는게 나을수 있다.)
+* 해결 03. 위 두가지 방법으로 안되면 네이티브 쿼리를 사용한다.
+* 쿼리는 데이터를 가져오는것에 집중해야지 화면에 예쁘게 보여주기 위해 from절 안에 from이 들어가고 서브쿼리를 작성하는것에 대해 고민해보아야 한다, 즉 프론트에서 해줘야할 로직을 쿼리에서 해결하려는 것은 아닌지 고민해보아야 된다.
+* */
