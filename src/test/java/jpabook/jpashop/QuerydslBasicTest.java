@@ -3,8 +3,6 @@ package jpabook.jpashop;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
-import javax.persistence.TypedQuery;
 
 import java.util.List;
 
@@ -604,9 +601,7 @@ public class QuerydslBasicTest {
     }
 
     private BooleanExpression usernameEq(String usernameCond) {
-        if(usernameCond == null){
-            return usernameCond != null ? member.username.eq(usernameCond) : null;
-        }
+        return usernameCond != null ? member.username.eq(usernameCond) : null;
     }
 
     private BooleanExpression ageEq(Integer ageCond) {
@@ -624,6 +619,7 @@ public class QuerydslBasicTest {
                 .set(member.username, "비회원")
                 .where(member.age.lt(28))
                 .execute();
+        System.out.println("count = " + count);
     }
 
     @Test
